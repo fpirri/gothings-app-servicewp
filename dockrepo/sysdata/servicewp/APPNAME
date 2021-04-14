@@ -1,0 +1,32 @@
+#!/bin/bash
+#                                                                     2021-04-10
+#  definizioni per la app:  service
+#    versione aggiornata della app 'servicewp'
+# ----------------------------------
+# Define app
+#   'version' ripreso da APPNAME
+AppName="service"
+AppDisplayName="WP Service"
+AppType="cloud"
+#
+# ----------------------------------
+# Define display
+MenuName="WP Service"
+MenuTag="${MenuName} v${Version}"
+#
+# ----------------------------------
+# variabili globali interne
+UserName=yesfi
+Home="/home/${UserName}/"
+Dockrepo="${Home}dockrepo/"
+AppDir="${Dockrepo}sysdata/${AppName}/"
+WorkDir=${AppDir}
+ScriptName="none"
+# -------------------------------------------------------  DA RIVEDERE alla fine
+# costanti varie
+USERNAME=${UserName}                                       # utente sulla droplet
+HOMEDIR=${Home}                                            # dir di lavoro per questo script
+#
+INSTALLDIR="${HOMEDIR}dockrepo/dockimages/${AppName}/"     # dir dei file di configurazione nella droplet
+GITHUBHOME="https://raw.githubusercontent.com/fpirri/"     # prefisso per i progetti fpirri su github
+#
