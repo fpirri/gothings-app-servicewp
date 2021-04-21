@@ -1,6 +1,6 @@
 {
   "type": "cloud",
-  "package": "nginx",
-    "status": "done",
-   "script": "dockrepo/sysdata/base/baseconfig/baseinit.sh"
+  "package": "servicewp",
+  "status": "todo",
+  "script": "dockrepo/sysdata/servicewp/servicewpinit.sh"
 }

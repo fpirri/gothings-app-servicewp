@@ -1,8 +1,8 @@
 {
   "type": "cloud",
-  "package": "nginx",
+  "package": "servicewp",
   "status": "todo",
-  "filetargz": "dockrepo/dockimages/nginx/nginxdirs.tar.gz",
-  "githubgzfile": "https://github.com/fpirri/gothings-cloud-apps/raw/master/nginx/dockrepo/dockimages/nginx/nginxdirs.tar.gz",
+  "filetargz": "dockrepo/dockimages/servicewp/servicewpdirs.tar.gz",
+  "githubgzfile": "https://github.com/fpirri/gothings-app-servicewp/raw/master/dockrepo/dockimages/servicewp/servicewpdirs.tar.gz",
   "script": "none"
 }
