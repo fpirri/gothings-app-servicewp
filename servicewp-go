@@ -39,6 +39,7 @@ UserName=yesfi
 Home="/home/${UserName}/"
 Dockrepo="${Home}dockrepo/"
 AppDir="${Dockrepo}sysdata/${AppName}/"
+AppConfigDir="${Dockrepo}sysconfig/${AppName}/"
 WorkDir=${Home}
 ScriptName="none"
 # -------------------------------------------------------  DA RIVEDERE alla fine
@@ -647,6 +648,12 @@ fi
 if [[ ! -s "${HOMEDIR}dockrepo/sysdata/${AppName}" ]]; then
   mkdir dockrepo/sysdata/${AppName}
 fi
+if [[ ! -s "${HOMEDIR}dockrepo/sysconfig" ]]; then
+  mkdir dockrepo/sysconfig
+fi
+if [[ ! -s "${HOMEDIR}dockrepo/sysconfig/${AppName}" ]]; then
+  mkdir dockrepo/sysconfig/${AppName}
+fi
 #
 MENUTRAP=0 #-------------- per ora non ci sono errori ...
 #
@@ -669,6 +676,7 @@ if [[ ${MENUTRAP} -eq 0 ]]; then #In effetti, non servirebbe, ma scrivo cosi' pe
   echo -e "    ${Red}  <-- environment phase NOT IMPLEMENTED ${Std}"
   dots_nl 2
 fi
+FileEnv="${AppConfigDir}.env-${AppName}"
 echo
 echo "Verify Environment phase should:"
 echo "- allow the user to set up the environment variables"
@@ -676,13 +684,25 @@ echo "- set up config files used by the app"
 echo "- make sure values entered by the user can be used by the running app"
 echo "- ...?"
 echo "Al momento non si fa niente di tutto cio'"
+echo "NOTA: il file .env-${AppName} va creato a mano !"
+echo "  ... e va anche caricato sulla droplet"
 echo
-echo "File .env-${AppName} content is:"
-cat .env-${AppName}
+echo "File ${FileEnv} content is:"
+cat "${FileEnv}"
 echo
+echo "Copy environment file in start location"
+#cp "${FileEnv}" "${AppDir}"
+cp "/pippo" "${AppDir}"
+RetValue=$?
+if [ "${RetValue}" -eq 0 ]; then
+  echo "Successfully copied file"
+  MENUTRAP=0 #-------------- per ora non ci sono errori ...
+else
+  echo "Could not create file" >&2
+  MENUTRAP=69 #-------------- report development error ...
+fi
 pause
 #
-MENUTRAP=0 #-------------- per ora non ci sono errori ...
 #
 # CONTINUE to the menu functions
 #
@@ -823,6 +843,7 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
   echo "      <-- exists, verifying content ..." 
 #
   verifyconfig
+  MENUTRAP=$?
 #
   DebugMode=0  # STOP printing vars ...
 #
@@ -836,7 +857,6 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
 #
 #  error details in:  .../github-gothings/README.github.gothings
 #
-  MENUTRAP=$?
   echo
   if [ ${MENUTRAP} -gt 0 ]; then
     echo -e "    ${Red}  <-- config phase returns code ${MENUTRAP}  ${Std}"
@@ -872,6 +892,7 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
   echo "      <-- exists, verifying content ..." 
 #
   verifyinit
+  MENUTRAP=$?
 #
   DebugMode=0  # STOP printing vars ...
 #
@@ -884,7 +905,6 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
 #
 #  error details in:  .../github-gothings/README.github.gothings
 #
-  MENUTRAP=$?
   echo
   if [ ${MENUTRAP} -gt 0 ]; then
     echo -e "    ${Red}  <-- expand phase returns code ${MENUTRAP}  ${Std}"
@@ -966,6 +986,16 @@ trap '' SIGQUIT SIGTSTP
 
 while true
 do
+  # development trap
+  if [[ ${MenuTrap} -eq 68 ]]
+  then
+    echo "------------------------------------------------------"
+    echo "This script encountered a development error"
+    echo "Please report to the mantainer Team"
+    echo "------------------------------------------------------"
+    echo
+    break  #-- stop menu
+  fi
   # internal trap
   if [[ ${MenuTrap} -eq 67 ]]
   then
