@@ -1,0 +1,83 @@
+#                                                                                         2019-10-05
+#
+#  GOTHINGS CLOUD:  compose file for wp services
+#
+#  ===================================================================  COMMENTI SOTTO:  DA RIVEDERE
+#
+#  Service wp API uses the containers:  nginx & wordpress-fpm
+#
+#  nginx     container implements a gateway from network to internal applications
+#            it is a reverse proxy http server
+#            it is differs only marginally from Fase 0 & 1
+#            base image: gothings/nginx:arm-002
+#            nginx version: openresty/1.13.6.1
+#
+#  base      is a nodejs container which runs two different http server 'counter'
+#            it is a template to develop javascript applications using nodejs and redis
+#            base image: gothings/vuedev:arm-001 <-- from gothings/nodebase:arm-004
+#            node version is 10.16.0
+#            npm version is 6.9.0
+#            @vue/cli version 3.10.0
+#
+#  redis     container works as a basic name/value application storage for nodejs
+#            Redis version 3.0.0 (32bit)
+#
+#  logspout  accept logs from other containers and send them to an UDP socket
+#            a container may opt-out through an envireonment variable
+#
+#
+###############
+#
+#    
+###############
+
+version: '3'
+
+networks:
+  gothingsnet:
+    external: true
+    # ipv4_addresses:
+    #   172.29.196.180 : nginx
+    #   172.29.196.181 : redis
+    #   172.29.196.182 : logspout
+    #   172.29.196.183 : nodesyslog
+    #   172.29.196.184 : 
+    #   172.29.196.185 : testvue
+    #   172.29.196.186 : base
+    #   172.29.196.187 : db
+    #   172.29.196.188 : wp-fpm
+    # 
+  servicenet:
+    external: true
+    # ipv4_addresses:
+    #   172.29.195.180 : nginx
+    #   172.29.195.181 : redis
+    #   172.29.195.182 : logspout
+    #   172.29.195.183 : nodesyslog
+    #   172.29.195.184 : mongo
+    #   172.29.195.185 : testvue
+    #   172.29.195.185 : base
+    #   172.29.195.2   : nodesimple ??  autoassegnato da compose
+    #
+    ############
+    #
+    # NOTA:
+    #        net host : vpn
+    #
+
+services:
+
+  servicewp:
+    #depends_on: 
+    #  - db
+    #image: wordpress:5.3.2-php7.2-fpm-alpine
+    image: wordpress:5.5.0-php7.2-fpm-alpine
+    container_name: servicewp
+    restart: unless-stopped
+    env_file: .env-servicewp
+    volumes:
+      - ~/dockrepo/sysdata/var_www/servicewp/:/var/www/html
+    networks:
+      gothingsnet:
+        ipv4_address: 172.29.196.188
+  

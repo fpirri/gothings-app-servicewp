@@ -795,7 +795,7 @@ if [[ ${MenuTrap} -eq 0 ]]; then
     fi
     MenuTrap=${RetLevel}
     pause
-    exit ${MenuTrap}
+    #exit ${MenuTrap}
   fi
   echo
   echo "###############################"
