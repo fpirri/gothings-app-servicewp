@@ -27,6 +27,8 @@ DebugMode=0                     # 0 == NO debug     > 0 == Show debug info
 AppName="servicewp"
 AppDisplayName="WP-API services"
 AppType="cloud"
+GithubName="gothings-app-${AppName}"
+GithubPath="${GithubName}/main/"
 #
 # ----------------------------------
 # Define display
@@ -36,19 +38,18 @@ MenuTag="${MenuName} v${Version}"
 # ----------------------------------
 # variabili globali interne
 UserName=yesfi
-Home="/home/${UserName}/"
-Dockrepo="${Home}dockrepo/"
+HomeDir="/home/${UserName}/"        # dir di lavoro per questo script
+Dockrepo="${HomeDir}dockrepo/"
 AppDir="${Dockrepo}sysdata/${AppName}/"
 AppConfigDir="${Dockrepo}sysconfig/${AppName}/"
-WorkDir=${Home}
+WorkDir=${HomeDir}
 ScriptName="none"
 # -------------------------------------------------------  DA RIVEDERE alla fine
-# costanti varie
-USERNAME=${UserName}                                       # utente sulla droplet
-HOMEDIR=${Home}                                            # dir di lavoro per questo script
 #
-INSTALLDIR="${HOMEDIR}dockrepo/dockimages/${AppName}/"     # dir dei file di configurazione nella droplet
-GITHUBHOME="https://raw.githubusercontent.com/fpirri/"     # prefisso per i progetti fpirri su github
+InstallDir="${HomeDir}dockrepo/dockimages/${AppName}/"     # dir dei file di configurazione nella droplet
+GithubHome="https://raw.githubusercontent.com/fpirri/"     # prefisso per i progetti fpirri su github
+#
+#  gothings-app-servicewp/main/dockrepo/dockimages/servicewp/servicewpexpand.json
 #
 # ------------------------------------------------------------------------------
 
@@ -157,8 +158,8 @@ stopmenu(){
   echo -e "$2"
   echo "------------------------------------------------------"
   echo 
-  MENUTRAP=66
-  RETLEVEL=66
+  MenuTrap=66
+  RetLevel=66
   return 66
 }
 #
@@ -187,7 +188,7 @@ consoleexit() {
   echo "---------------------------------------------------------"
   echo "Thank you for using   G O T H I N G S   C L O U D   MENU"
   echo
-  MENUTRAP=0
+  MenuTrap=0
   exit 0
 }
 #
@@ -259,7 +260,7 @@ getgitfile(){    # Lettura file da github
 #  abbiamo le variabili di ingresso:
 #   $1 :  FileExpand=<AppName>config.json                       "nomefile"   
 #   $2 :  GithubPath="gothings-cloud-apps/master/${AppName}/"    "github project branch"
-#   $3 :  LocalInstallDir="dockrepo/dockimages/${AppName}/"      "droplet path after $HOMEDIR"
+#   $3 :  LocalInstallDir="dockrepo/dockimages/${AppName}/"      "droplet path after $HomeDir"
 #   $4 :  optional input variable, make file executable if value is "EXEC"
 #
 #        --> attenti alle barre inizio-fine--> $1: no-no ;  $2: no-si ;  $3: no-si
@@ -272,14 +273,14 @@ getgitfile(){    # Lettura file da github
 #     
 local Filegit GithubFile
 echo "Sono getgitfile - DebugMode: ${DebugMode}"
-  Filegit="${HOMEDIR}$3$1"
+  Filegit="${HomeDir}$3$1"
   if [ ${DebugMode} -gt 0 ]; then
     echo "Input vars:"
     echo "  \$1 \(nomefile\) : $1"
     echo "  \$2 \(github project branch\) : $2"    #<-- togliere la 'location'==="https://github.com/fpirri/"
-    echo "  \$3 \(path after \$HOMEDIR\) : $3"     #<-- path===github path 
+    echo "  \$3 \(path after \$HomeDir\) : $3"     #<-- path===github path 
     echo "  \$4 \(optional input variable\) : $4"  #<-- make file executable if value is "EXEC"
-    echo "  HOMEDIR \(home\) : ${HOMEDIR}"
+    echo "  HomeDir \(home\) : ${HomeDir}"
   fi
   echo "il file cercato e': ${Filegit}"
   if [[ -s "${Filegit}" ]]; then
@@ -287,8 +288,8 @@ echo "Sono getgitfile - DebugMode: ${DebugMode}"
     echo "il file: ${Filegit} esiste gia'"
   else            # si prova a scaricarlo
     #
-    #GITHUBHOME="https://raw.githubusercontent.com/fpirri/"     # prefisso per i progetti fpirri su github
-    GithubFile="${GITHUBHOME}$2$3$1"
+    #  aggiugi prefisso per i progetti fpirri su github
+    GithubFile="${GithubHome}$2$3$1"
     echo " da github: ${GithubFile}"
     echo "Cerco di scaricare il file:"
     echo "${Filegit}"
@@ -327,7 +328,7 @@ verifyexpand() {
 #
   local filejson status filetargz githubgzfile script temp debuglog nvar
   local type, package, status, filetargz, githubgzfile, script
-  filejson="${HOMEDIR}dockrepo/dockimages/${AppName}/${AppName}expand.json"
+  filejson="${HomeDir}dockrepo/dockimages/${AppName}/${AppName}expand.json"
   ScriptName="none"
   #
   echo "    <-- verify expand"
@@ -362,27 +363,27 @@ verifyexpand() {
   (( nvar += $? ))
   if [[ "${nvar}" -ne 6 ]]; then
     bugmessage ERROR 1 "    JSON invalid number of values"
-    return 1 #                                                                 ERROR 1: Invalid JSON
+    return 1 #                                                                 ERROR 1: Invalid JSON # of values
   fi
   echo "    <-- non-null variables: ${nvar}"
   # verifica stringhe nulle
   temp=$((${#temp} * ${#type} * ${#package} * ${#status} * ${#filetargz} * ${#githubgzfile}))
   if [[ "${temp}" -eq 0 ]]; then
     bugmessage ERROR 2 "    JSON file ${filejson} returned empty string"
-    return 2 #                                                                 ERROR 2: Invalid JSON
+    return 2 #                                                                 ERROR 2: Invalid JSON: empty string
   fi
   # valori apparentemente accettabili, andiamo avanti
   # verifica type & package
   if [ "${type}" != "${AppType}" ]; then
     bugmessage ERROR 13 "    JSON expand file returned invalid type - should be: ${AppType}"
-    return 13 #                                                                 ERROR 13: Invalid JSON
+    return 13 #                                                                 ERROR 13: Invalid JSON: AppType
   fi
   if [ "${package}" != "${AppName}" ]; then
     bugmessage ERROR 14 "    JSON expand file returned invalid package - should be: ${AppName}"
-    return 13 #                                                                 ERROR 14: Invalid JSON
+    return 13 #                                                                 ERROR 14: Invalid JSON: AppName
   fi
   echo "    <-- variable types OK"
-  filetargz="${HOMEDIR}${filetargz}"
+  filetargz="${HomeDir}${filetargz}"
   echo "    <-- sysdata for ${AppDisplayName} environment read from ${filetargz}"
   case "${status}" in
     todo) #                                      expand archive .tar.gz
@@ -399,7 +400,7 @@ verifyexpand() {
         fi
       fi
       echo "    <--  expand archive file"
-      sudo tar xpf "${filetargz}" -C "$HOMEDIR" #   si espande l'archivio
+      sudo tar xpf "${filetargz}" -C "$HomeDir" #   si espande l'archivio
       temp=$?
       if [[ ! $temp -eq 0 ]]; then
         bugmessage ERROR 66 "    archive expansion failed"
@@ -535,7 +536,7 @@ startapp() {
   echo "Use docker-compose to START ${AppDisplayName} container"
   echo
   echo "Starting docker-compose ..."
-  docker-compose -f "${HOMEDIR}dockrepo/sysdata/${AppName}/${AppName}.yml" up -d
+  docker-compose -f "${HomeDir}dockrepo/sysdata/${AppName}/${AppName}.yml" up -d
   dots 2
   echo "Done."
 }
@@ -556,7 +557,7 @@ pauseapp() {
       [yY]) 
         echo
         echo "Using docker-compose to stop ${AppDisplayName} container ..."
-        docker-compose -f "${HOMEDIR}dockrepo/sysdata/${AppName}/${AppName}.yml" stop
+        docker-compose -f "${HomeDir}dockrepo/sysdata/${AppName}/${AppName}.yml" stop
         echo
         dots 3
         echo "done."
@@ -586,7 +587,7 @@ destroyapp() {
       [yY]) 
         echo
         echo "Using docker-compose to stop & destroy ${AppDisplayName} container ..."
-        docker-compose -f "${HOMEDIR}dockrepo/sysdata/${AppName}/${AppName}.yml" down
+        docker-compose -f "${HomeDir}dockrepo/sysdata/${AppName}/${AppName}.yml" down
         echo
         dots 3
         echo "done."
@@ -611,8 +612,7 @@ echo
 echo "Executing ${ThisScript}"
 echo -e "Gestione della app ${AppDisplayName} - ${Red} versione in sviluppo ${Std}"
 echo
-dots_nl 1
-pause
+dots_nl 2
 #
 # Comunica dove siamo
 cd ${WorkDir}
@@ -633,31 +633,31 @@ dots_nl 3
 echo
 echo "Verify directory structure ..."
 # la prima volta non ci sono i dirs, creiamoli !
-if [[ ! -s "${HOMEDIR}dockrepo" ]]; then
+if [[ ! -s "${HomeDir}dockrepo" ]]; then
   mkdir dockrepo/
 fi
-if [[ ! -s "${HOMEDIR}dockrepo/dockimages" ]]; then
+if [[ ! -s "${HomeDir}dockrepo/dockimages" ]]; then
   mkdir dockrepo/dockimages
 fi
-if [[ ! -s "${HOMEDIR}dockrepo/dockimages/${AppName}" ]]; then
+if [[ ! -s "${HomeDir}dockrepo/dockimages/${AppName}" ]]; then
   mkdir dockrepo/dockimages/${AppName}
 fi
-if [[ ! -s "${HOMEDIR}dockrepo/sysdata" ]]; then
+if [[ ! -s "${HomeDir}dockrepo/sysdata" ]]; then
   mkdir dockrepo/sysdata
 fi
-if [[ ! -s "${HOMEDIR}dockrepo/sysdata/${AppName}" ]]; then
+if [[ ! -s "${HomeDir}dockrepo/sysdata/${AppName}" ]]; then
   mkdir dockrepo/sysdata/${AppName}
 fi
-if [[ ! -s "${HOMEDIR}dockrepo/sysconfig" ]]; then
+if [[ ! -s "${HomeDir}dockrepo/sysconfig" ]]; then
   mkdir dockrepo/sysconfig
 fi
-if [[ ! -s "${HOMEDIR}dockrepo/sysconfig/${AppName}" ]]; then
+if [[ ! -s "${HomeDir}dockrepo/sysconfig/${AppName}" ]]; then
   mkdir dockrepo/sysconfig/${AppName}
 fi
 #
-MENUTRAP=0 #-------------- per ora non ci sono errori ...
+MenuTrap=0 #-------------- per ora non ci sono errori ...
 #
-if [[ ${MENUTRAP} -eq 0 ]]; then #In effetti, non servirebbe, ma scrivo cosi' per uniformita' ...
+if [[ ${MenuTrap} -eq 0 ]]; then #In effetti, non servirebbe, ma scrivo cosi' per uniformita' ...
 #
 #################################################################################
 ####################################  verify security & configuration environment
@@ -691,15 +691,14 @@ echo "File ${FileEnv} content is:"
 cat "${FileEnv}"
 echo
 echo "Copy environment file in start location"
-#cp "${FileEnv}" "${AppDir}"
-cp "/pippo" "${AppDir}"
+cp "${FileEnv}" "${AppDir}"
 RetValue=$?
 if [ "${RetValue}" -eq 0 ]; then
   echo "Successfully copied file"
-  MENUTRAP=0 #-------------- per ora non ci sono errori ...
+  MenuTrap=0 #-------------- per ora non ci sono errori ...
 else
   echo "Could not create file" >&2
-  MENUTRAP=69 #-------------- report development error ...
+  MenuTrap=69 #-------------- report development error ...
 fi
 pause
 #
@@ -708,7 +707,7 @@ pause
 #
 ################################################################################
 ##################################################################  phase EXPAND
-if [[ ${MENUTRAP} -eq 0 ]]; then
+if [[ ${MenuTrap} -eq 0 ]]; then
   echo
   echo "    EXPAND phase starts ..."
   echo
@@ -743,9 +742,6 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
 #  Le fasi config e init dipendono dalle necessita' di ogni app e sono
 #  definite separatamente per ognuna
 #
-#  La parte comune a tutte le app richiama le funzioni verify<config> e
-#  verify<init> che saranno scritte separatamente per ogni app
-#
 ##################################
 #
 #  Esempio di file richiamato dall'archivio github
@@ -760,7 +756,6 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
   DebugMode=1  # START printing vars ...
 #
   FileExpand="${AppName}expand.json"
-  GithubPath="gothings-cloud-apps/master/${AppName}/"
   LocalInstallDir="dockrepo/dockimages/${AppName}/"
 #
 # assicurati che il file di configurazione esista
@@ -774,6 +769,8 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
   echo "      <-- exists, verifying content ..." 
 #
   verifyexpand
+  RetLevel=$?
+#
   DebugMode=0  # STOP printing vars ...
 #
 #----  verifica parte expand
@@ -786,20 +783,19 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
 #
 #  error details in:  .../github-gothings/README.github.gothings
 #
-  RETLEVEL=$?
-  echo "    <-- expand phase returns code ${RETLEVEL}"
-  if [ ${RETLEVEL} -gt 0 ]; then
+  echo "    <-- expand phase returns code ${RetLevel}"
+  if [ ${RetLevel} -gt 0 ]; then
     debuglog="Expand phase not good"
-    if [ ${RETLEVEL} -lt 50 ]; then
+    if [ ${RetLevel} -lt 50 ]; then
       echo
-      bugmessage ERROR "${RETLEVEL}" "    expand phase"
+      bugmessage ERROR "${RetLevel}" "    expand phase"
     else
       echo
-      bugmessage ERROR "${RETLEVEL}" "    expand phase"
+      bugmessage ERROR "${RetLevel}" "    expand phase"
     fi
-    MENUTRAP=${RETLEVEL}
+    MenuTrap=${RetLevel}
     pause
-    exit ${MENUTRAP}
+    exit ${MenuTrap}
   fi
   echo
   echo "###############################"
@@ -807,7 +803,7 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
   echo
 fi
 #
-if [[ ${MENUTRAP} -eq 0 ]]; then
+if [[ ${MenuTrap} -eq 0 ]]; then
 ################################################################################
 ##################################################################  phase CONFIG
   echo
@@ -843,7 +839,7 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
   echo "      <-- exists, verifying content ..." 
 #
   verifyconfig
-  MENUTRAP=$?
+  MenuTrap=$?
 #
   DebugMode=0  # STOP printing vars ...
 #
@@ -858,10 +854,10 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
 #  error details in:  .../github-gothings/README.github.gothings
 #
   echo
-  if [ ${MENUTRAP} -gt 0 ]; then
-    echo -e "    ${Red}  <-- config phase returns code ${MENUTRAP}  ${Std}"
+  if [ ${MenuTrap} -gt 0 ]; then
+    echo -e "    ${Red}  <-- config phase returns code ${MenuTrap}  ${Std}"
   else
-    echo -e "    <-- config phase returns code ${MENUTRAP}"
+    echo -e "    <-- config phase returns code ${MenuTrap}"
   fi
   echo
   echo "###############################"
@@ -869,7 +865,7 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
   echo
 fi
 #
-if [[ ${MENUTRAP} -eq 0 ]]; then
+if [[ ${MenuTrap} -eq 0 ]]; then
 #################################################################################
 #####################################################################  phase INIT
   echo
@@ -892,7 +888,7 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
   echo "      <-- exists, verifying content ..." 
 #
   verifyinit
-  MENUTRAP=$?
+  MenuTrap=$?
 #
   DebugMode=0  # STOP printing vars ...
 #
@@ -906,10 +902,10 @@ if [[ ${MENUTRAP} -eq 0 ]]; then
 #  error details in:  .../github-gothings/README.github.gothings
 #
   echo
-  if [ ${MENUTRAP} -gt 0 ]; then
-    echo -e "    ${Red}  <-- expand phase returns code ${MENUTRAP}  ${Std}"
+  if [ ${MenuTrap} -gt 0 ]; then
+    echo -e "    ${Red}  <-- expand phase returns code ${MenuTrap}  ${Std}"
   else
-    echo -e "    <-- expand phase returns code ${MENUTRAP}"
+    echo -e "    <-- expand phase returns code ${MenuTrap}"
   fi
   echo
   echo "###############################"
@@ -928,7 +924,7 @@ echo "        MAIN MENU to manage ${AppDisplayName}"
 echo "========================================================================="
 echo
 #
-sleep 3
+dots 3
 #
 ################################################################################
 # function to display menus
@@ -986,6 +982,8 @@ trap '' SIGQUIT SIGTSTP
 
 while true
 do
+  #
+  echo "MenuTrap: ${MenuTrap}"
   # development trap
   if [[ ${MenuTrap} -eq 68 ]]
   then
@@ -1018,6 +1016,15 @@ do
     echo " dinamically update software during the first istallation and"
     echo " during updates"
     echo "----------------------------------------------------------------"
+    echo
+    break  #-- stop menu
+  fi
+  # generic trap
+  if [ ${MenuTrap} -gt 0 ]; then
+    echo "------------------------------------------------------"
+    echo "This script encountered the generic error ${MenuTrap}"
+    echo "Please report to the mantainer Team"
+    echo "------------------------------------------------------"
     echo
     break  #-- stop menu
   fi
