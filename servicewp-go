@@ -42,6 +42,7 @@ HomeDir="/home/${UserName}/"        # dir di lavoro per questo script
 Dockrepo="${HomeDir}dockrepo/"
 AppDir="${Dockrepo}sysdata/${AppName}/"
 AppConfigDir="${Dockrepo}sysconfig/${AppName}/"
+AppSecretDir="${Dockrepo}docksecret/${AppName}/"
 WorkDir=${HomeDir}
 ScriptName="none"
 # -------------------------------------------------------  DA RIVEDERE alla fine
@@ -659,52 +660,6 @@ MenuTrap=0 #-------------- per ora non ci sono errori ...
 #
 if [[ ${MenuTrap} -eq 0 ]]; then #In effetti, non servirebbe, ma scrivo cosi' per uniformita' ...
 #
-#################################################################################
-####################################  verify security & configuration environment
-#
-#  ----  verifica security environment:  si producono i file .env-* in sysdata
-#
-# scopo: produrre i segreti della app in modo sicuro
-#
-# nel caso wp i segreti sono user, pwd, db-prefix etc.
-# copiando dal '5 minutes install' dovrebbero essere scritti dall'utente ...
-#
-# ** si fara' in seguito ! **
-# per adesso si copia un file da sysconfig ne dir di lavoro della app
-#
-#############
-  echo -e "    ${Red}  <-- environment phase NOT IMPLEMENTED ${Std}"
-  dots_nl 2
-fi
-FileEnv="${AppConfigDir}.env-${AppName}"
-echo
-echo "Verify Environment phase should:"
-echo "- allow the user to set up the environment variables"
-echo "- set up config files used by the app"
-echo "- make sure values entered by the user can be used by the running app"
-echo "- ...?"
-echo "Al momento non si fa niente di tutto cio'"
-echo "NOTA: il file .env-${AppName} va creato a mano !"
-echo "  ... e va anche caricato sulla droplet"
-echo
-echo "File ${FileEnv} content is:"
-cat "${FileEnv}"
-echo
-echo "Copy environment file in start location"
-cp "${FileEnv}" "${AppDir}"
-RetValue=$?
-if [ "${RetValue}" -eq 0 ]; then
-  echo "Successfully copied file"
-  MenuTrap=0 #-------------- per ora non ci sono errori ...
-else
-  echo "Could not create file" >&2
-  MenuTrap=69 #-------------- report development error ...
-fi
-pause
-#
-#
-# CONTINUE to the menu functions
-#
 ################################################################################
 ##################################################################  phase EXPAND
 if [[ ${MenuTrap} -eq 0 ]]; then
@@ -802,6 +757,61 @@ if [[ ${MenuTrap} -eq 0 ]]; then
   echo "          EXPAND phase done."
   echo
 fi
+#
+#################################################################################
+####################################  verify security & configuration environment
+#
+#  ----  verifica security environment:  si producono i file .env-* in sysdata
+#
+# scopo: produrre i segreti della app in modo sicuro
+#
+# nel caso wp i segreti sono user, pwd, db-prefix etc.
+# copiando dal '5 minutes install' dovrebbero essere scritti dall'utente ...
+#
+# il sysconfig ha dei valori dummy che potranno servire come template per i dati dell'utente
+#
+# durante lo sviluppo mettiamo a mano un .../dockrepo/docsecrets/servicewp/.env-servicewp
+# con valori fasulli
+#
+# nel definitivo dovremo avere un dockre
+#
+############
+# ** si fara' in seguito ! **
+# per adesso si copia un file da sysconfig nel dir di lavoro della app
+#
+#############
+  echo -e "    ${Red}  <-- environment phase NOT IMPLEMENTED ${Std}"
+  dots_nl 2
+fi
+FileEnv="${AppSecretDir}.env-${AppName}"
+echo
+echo "Verify Environment phase should:"
+echo "- allow the user to set up the environment variables"
+echo "- set up config files used by the app"
+echo "- make sure values entered by the user can be used by the running app"
+echo "- ...?"
+echo
+echo "Al momento non si fa niente di tutto cio'"
+echo "NOTA: il file .env-${AppName} va creato a mano !"
+echo "  ... e va anche caricato sulla droplet prima di partire"
+echo
+echo "File ${FileEnv} content is:"
+cat "${FileEnv}"
+echo
+echo "Copy environment file in start location"
+cp "${FileEnv}" "${AppDir}"
+RetValue=$?
+if [ "${RetValue}" -eq 0 ]; then
+  echo "Successfully copied file"
+  MenuTrap=0 #-------------- per ora non ci sono errori ...
+else
+  echo "Could not create file" >&2
+  MenuTrap=69 #-------------- report development error ...
+fi
+pause
+#
+#
+# CONTINUE to the menu functions
 #
 if [[ ${MenuTrap} -eq 0 ]]; then
 ################################################################################
