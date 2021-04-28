@@ -1,6 +1,6 @@
 {
   "type": "cloud",
   "package": "servicewp",
-    "status": "todo",
-   "script": "dockrepo/sysdata/servicewp/servicewpconfig.sh"
+   "status": "todo",
+   "script": "none"
 }

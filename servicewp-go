@@ -43,6 +43,8 @@ Dockrepo="${HomeDir}dockrepo/"
 AppDir="${Dockrepo}sysdata/${AppName}/"
 AppConfigDir="${Dockrepo}sysconfig/${AppName}/"
 AppSecretDir="${Dockrepo}docksecret/${AppName}/"
+SiteFile="${AppDir}nginxdata/sites-enabled/${AppName}"
+SiteNginxDir="${Dockrepo}sysdata/nginxdata/sites-enabled/"
 WorkDir=${HomeDir}
 ScriptName="none"
 # -------------------------------------------------------  DA RIVEDERE alla fine
@@ -244,7 +246,15 @@ bugmessage(){
 }
 #
 ##########################################################################
-
+bugprint(){
+# stampa di un avviso, ma solo se DebugMode -gt 0
+#
+#  $1 :  avviso all'utente, come: 'ho fatto questo o quello'
+#
+  if [ ${DebugMode} -gt 0 ]; then
+    echo $1
+  fi
+}
 #
 ##########################################################################
 getgitfile(){    # Lettura file da github
@@ -273,9 +283,9 @@ getgitfile(){    # Lettura file da github
 #         se non funziona si torna con ITEXISTS=0
 #     
 local Filegit GithubFile
-echo "Sono getgitfile - DebugMode: ${DebugMode}"
   Filegit="${HomeDir}$3$1"
   if [ ${DebugMode} -gt 0 ]; then
+    echo "Sono getgitfile in DebugMode: ${DebugMode}"
     echo "Input vars:"
     echo "  \$1 \(nomefile\) : $1"
     echo "  \$2 \(github project branch\) : $2"    #<-- togliere la 'location'==="https://github.com/fpirri/"
@@ -441,31 +451,149 @@ verifyexpand() {
 #
 ################################################################################
 verifyconfig() {
-#
-#### versione iniziale : NON FA NIENTE !!!
-#
-#  si verifica <appname>config.json per vedere se l'espansione e' da fare,
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+#  si verifica <AppName>config.json per vedere se l'espansione e' da fare,
 #  ovvero se e' gia' fatta o non e' comunque necessaria:
 #
 #  ritorna 0 se l'operazione non ha prodotto errori
 #          1 se ci sono stati errori ...
 #
-#  error details in:  .../github-gothings/README.github.gothings
-#
 #  Vedi i commenti sulla fase expand per la struttura del repositori
 #  ed altre info
 #
-  echo
-  echo "Verifica della configurazione di: ${AppDisplayName}"
-  echo
+#  si rende raggiungibile la app con HTTPS
+#    <-- la app lavora internamente in HTTP (senza encription)
+#        ed e'nginx che se ne occupa in tutte le comunicazioni
+#        con l'esterno del container
+#
+#  il .json mantiene lo status dell'installazione ( todo / done )
+#
+  local filejson type package status script xscript temp debuglog nvar
+  filejson="${HomeDir}dockrepo/dockimages/${AppName}/${AppName}config.json"
   ScriptName="none"
-#
-  echo "Fase config - versione sperimentale"
-  echo -e "${Red} per ora non si fa NIENTE ${Std}"
-  echo
-  dots 3
-#
-  ScriptName=${script}
+  #
+  if [ ${DebugMode} -gt 0 ]; then
+    echo "sono la funzione verifyconfig in debug mode"
+    echo "    <-- configuration data read from ${filejson}"
+  fi
+  temp=($(cat "${filejson}" | jq -r '.type,.package,.status,.script'))
+  # verifica che non ci siano null!!
+  if [ ${DebugMode} -gt 0 ]; then
+    echo "    <--         type: ${temp[0]}"
+    echo "    <--      package: ${temp[1]}"
+    echo "    <--       status: ${temp[2]}"
+    echo "    <--       script: ${temp[3]}"
+  fi
+  # aggiusta le variabili, se necessario
+  nvar=0
+  type=${temp[0]}
+  json2string type
+  (( nvar += $? ))
+  package=${temp[1]}
+  json2string package
+  (( nvar += $? ))
+  status=${temp[2]}
+  json2string status
+  (( nvar += $? ))
+  script=${temp[3]}
+  json2string script
+  (( nvar += $? ))
+  if [[ "${nvar}" -ne 4 ]]; then
+    bugmessage ERROR 1 "    JSON invalid number of values"
+    return 1 #                                                                 ERROR 1: Invalid JSON # of values
+  fi
+  bugprint "    <-- non-null variables: ${nvar}"
+  # verifica stringhe nulle
+  temp=$((${#temp} * ${#type} * ${#package} * ${#status}))
+  if [[ "${temp}" -eq 0 ]]; then
+    bugmessage ERROR 2 "    JSON file ${filejson} returned empty string"
+    return 2 #                                                                 ERROR 2: Invalid JSON: empty string
+  fi
+  # valori apparentemente accettabili, andiamo avanti
+  # verifica type & package
+  if [ "${type}" != "${AppType}" ]; then
+    bugmessage ERROR 13 "    JSON expand file returned invalid type - should be: ${AppType}"
+    return 13 #                                                                 ERROR 13: Invalid JSON: AppType
+  fi
+  if [ "${package}" != "${AppName}" ]; then
+    bugmessage ERROR 14 "    JSON config file returned invalid package - should be: ${AppName}"
+    return 13 #                                                                 ERROR 14: Invalid JSON: AppName
+  fi
+  echo "    <-- variable types OK"
+  # verifica la variabile status
+  echo "    <-- read status from json file ${filejson}"
+  echo "status: ${status}"
+
+
+  xscript="${HOMEDIR}${script}"
+  debuglog="|| verify install |"
+
+
+  case "${status}" in
+    todo) #                                                                       install cloud to do
+#     xscript:   ${AppDir}script
+#     echo "xscript: ${xscript}"
+      bugprint "   <-- verifyconfig:   'todo'"
+      if [ "${script}" != "none" ]; then
+        xscript="${AppDir}${script}"
+        if [[ -s "${xscript}" ]]; then # file exists and length > 0
+          debuglog="${debuglog}| ${xscript} esiste |"
+        else
+          debuglog="${debuglog}| install script ${xscript} not found |"
+          bugmessage ERROR 66 "    file not found"
+          return 66 #                                                 il file non esiste  -->  ERRORE 4
+        fi
+        ######################## do install :
+        ##### copia sites-enabled !                                        DA FARE
+        echo "    <-- exec ${xscript} ..."
+        ${xscript} # esegui lo script di install
+        RetValue=$?
+        echo "    <-- ${script} return code: ${RetValue}"
+        if [ "${RetValue}" -gt 0 ]; then # errore nello script
+          if [ "${RetValue}" -eq "666" ]; then # set codice errore
+            ERRCODE=82
+          else
+            ERRCODE=81
+          fi
+          debuglog="|${debuglog}| init script return value: ${RetValue} |"
+          bugmessage ERROR ${ERRCODE}"    init script execution error"
+          return ${ERRCODE}
+        else
+          # install done : update .json file
+          echo
+          echo "    <-- update .json status from 'todo' to 'done'"
+          echo "$(cat "${filejson}" | jq -r '.status |= "done"')" > "${filejson}.new"
+          temp=$?
+          echo "    <-- save existing file into 'old'"
+          cp -r "${filejson}"  "${filejson}.old"
+          echo "    <-- copy 'new' file onto cloudinstall.json"
+          cp -r "${filejson}.new"  "${filejson}"
+          echo -n "    <-- verify cloudinstall.json status : "
+          temp=($(cat ${filejson} | jq -r '.status'))
+          echo ${temp}
+          if [ "${temp}" != "done" ]; then
+            bugmessage ERROR 5 "    ERROR : can't update ${filejson} file"
+            return 5 #                                         update JSON file failed!  -->  ERRORE 5
+          fi
+        fi
+      echo "    <-- .json status update OK"
+      echo "    ------------------------------"
+      ;;
+
+
+    done)
+      bugprint "   <-- verifyconfig:   'done'"
+      echo "    OK - config not required"
+      return 0
+      ;;
+    *)
+      bugprint "   <-- verifyconfig:   'status value is invalid'"
+      bugmessage ERROR 3 "    ERROR 3 - JSON status value is invalid"
+      return 3
+      ;; #                                                                     ERROR 3: Invalid JSON
+  esac
+  echo "    VerifyConfig OK"
   return 0
 }
 #
@@ -708,7 +836,7 @@ if [[ ${MenuTrap} -eq 0 ]]; then
 #      $4:  <not applicable>
 #
 #
-  DebugMode=1  # START printing vars ...
+  DebugMode=1  # START printing vars with 'bugmessage' function ...
 #
   FileExpand="${AppName}expand.json"
   LocalInstallDir="dockrepo/dockimages/${AppName}/"
@@ -811,16 +939,11 @@ fi
 pause
 #
 #
-# CONTINUE to the menu functions
+# CONTINUE verifying app status
 #
 if [[ ${MenuTrap} -eq 0 ]]; then
 ################################################################################
 ##################################################################  phase CONFIG
-  echo
-  echo "-------------------------------"
-  echo "    CONFIG phase starts ..."
-  echo "      verify ${AppName} config file ..."
-#######
 #
 #  Si configura il sito virtuale della app
 #    <-- si copia in 'sites-enabled' il vhost della app:
@@ -832,9 +955,16 @@ if [[ ${MenuTrap} -eq 0 ]]; then
 #
 #
 #######
+  echo
+  echo "-------------------------------"
+  echo "    CONFIG phase starts ..."
+  echo "      verify ${AppName} config file ..."
+#######
+
+
 #@@@@@@@@@@@@@@@@@@@@@@ mettere AVVISO
 #
-  DebugMode=1  # START printing vars ...
+  DebugMode=1  # START printing vars with 'bugmessage' function ...
 #
   FileConf="${AppName}config.json"       #  file di configurazione della fase config
   # assicurati che il file di configurazione esista
@@ -883,7 +1013,7 @@ if [[ ${MenuTrap} -eq 0 ]]; then
   echo "    INIT phase starts ..."
   echo "      verify ${AppName} init config file ..."
   #
-  DebugMode=1  # START printing vars ...
+  DebugMode=1  # START printing vars with 'bugmessage' function ...
   #
   FileInit="${AppName}init.json"       #  file di configurazione della fase init
   # assicurati che il file di configurazione esista

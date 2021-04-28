@@ -1,0 +1,143 @@
+#                                                                               2021-04-26
+#
+# Funzione: servizi PHP usando la Wordpress Rest API
+#     (ripreso da wpmultisite nella droplet gothings v01.03)
+#
+# Obiettivi da raggiungere:
+#  - semplificare lo sviluppo dei microservices locali
+#      <-- un file per ogni sito o gruppo omogeneo di siti
+#  - mixing local & public access
+#      <-- separazione tra accesso https e servizi locali in http
+#  - uniformare debug
+#      <-- adesso sparso nel servizio 'user' in cloudlog
+#  - redirect http-->https per la api
+#      <-- sezione unica per tutti i siti *.gothings.org  <-- ?? da fare
+#
+################################################################################
+#
+#  DOC in .../WP-Sviluppi/gothings/README.gothings.cloud
+#      cerca:   *** Service WP - v0.01.07 ***
+#               installazione WP Service
+#
+#  per vedere la storia precedente: 
+#         .../cloud-dev/dockrepo/sysdata/nginxdata/sites-enabled/services
+#      cerca:    *** WPMulti v0.01.04 ***
+#                wordpress secure install  |
+#
+################################################################################
+#  
+#  WP Multisite
+#
+#  - gestione servizi con la WP REST API
+#  - wp versione multisite in https
+#
+####################################################################################################
+#
+################################################################################
+#
+#  REDIRECT 80
+#
+#  - redirect da porta http a porta https  (80-->443)
+#  - gestione dei certificati con certbot
+#
+#  Ripreso da: .../WP-Sviluppi/gothings/base/dockrepo/sysdata/nginxdata/sites-enabled/base80
+#    <-- in uso sulla droplet v-01-03
+#
+################################################################################
+server {###  redirection for servicewp  ########################################
+  listen 80;
+  #  TUTTI i nomi validi per la app servicewp
+  server_name
+    # siti wordpress
+              www.pirri.me
+              franco.pirri.me
+              marco.pirri.me
+              stefano.pirri.me
+    # altri siti da portare in https per questa app:
+    #         ??
+              telemat.pirri.me
+  ;
+
+  location ~ /.well-known/acme-challenge {
+    set $debug_value '|wpm: acme-challenge|';
+    allow all;
+    root /var/www/html;
+  }
+
+  location / {
+    rewrite ^ https://$host$request_uri? permanent;
+  }
+}
+#
+#################################################################################
+####################################################################################################
+server {
+  listen 443 ssl http2;
+  server_name
+              www.pirri.me
+              telemat.pirri.me
+              franco.pirri.me
+              marco.pirri.me
+              stefano.pirri.me
+  ;
+
+	access_log /dev/stdout gothings_services;
+  set $debug_value '{servicewp: multisite}';#                  ----------------- init debug_value
+
+  index index.php index.html index.htm;
+  root /var/www/servicewp;
+  server_tokens off;
+
+  ssl_certificate /etc/letsencrypt/live/gothings.org/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/gothings.org/privkey.pem;
+
+  #####################################################################  ??? DA GUARDARE
+  # include /etc/nginx/conf.d/options-ssl-nginx.conf;
+
+  add_header HTTP_X_FORWARDED_PROTO "https" always;
+  add_header X-Frame-Options "SAMEORIGIN" always;
+  add_header X-XSS-Protection "1; mode=block" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header Referrer-Policy "no-referrer-when-downgrade" always;
+  add_header Content-Security-Policy "default-src * data: 'unsafe-eval' 'unsafe-inline'" always;
+  # add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+  # enable strict transport security only if you understand the implications
+
+  location / {
+    set $debug_value '|servicewp: home|';
+    try_files $uri $uri/ /index.php$is_args$args;
+  }
+
+  location ~ \.php$ {
+    set $debug_value '|servicewp: *.php|';
+    set $wordpress '172.29.196.188';
+    try_files $uri =404;
+    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+    fastcgi_pass $wordpress:9000;
+    fastcgi_index index.php;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_param PATH_INFO $fastcgi_path_info;
+  }
+
+  location ~ /\.ht {
+    set $debug_value '|servicewp: wp *.php|';
+    deny all;
+  }
+
+  location = /favicon.ico { 
+    set $debug_value '|servicewp: favicon 4 wp|';
+    log_not_found off; access_log off; 
+  }
+  location = /robots.txt { 
+    set $debug_value '|servicewp: wp robots|';
+    log_not_found off; access_log off; allow all; 
+  }
+  location ~* \.(css|gif|ico|jpeg|jpg|js|png)$ {
+    set $debug_value '|servicewp: file vari|';
+    expires max;
+    log_not_found off;
+  }
+}
+#
+################################################################################
