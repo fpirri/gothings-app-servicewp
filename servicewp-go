@@ -577,11 +577,10 @@ verifyconfig() {
             return 5 #                                         update JSON file failed!  -->  ERRORE 5
           fi
         fi
+      fi
       echo "    <-- .json status update OK"
       echo "    ------------------------------"
       ;;
-
-
     done)
       bugprint "   <-- verifyconfig:   'done'"
       echo "    OK - config not required"
