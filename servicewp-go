@@ -935,6 +935,7 @@ else
   echo "Could not create file" >&2
   MenuTrap=69 #-------------- report development error ...
 fi
+echo -e "    ${Red}  <-- please update environment phase before PRODUCTION ! ${Std}"
 pause
 #
 #
