@@ -43,6 +43,11 @@
 #  Ripreso da: .../WP-Sviluppi/gothings/base/dockrepo/sysdata/nginxdata/sites-enabled/base80
 #    <-- in uso sulla droplet v-01-03
 #
+###
+# refs di sviluppo:
+#    https://pentacent.medium.com/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71
+#    https://www.cloudbooklet.com/how-to-install-nginx-and-lets-encrypt-with-docker-ubuntu-20-04/
+#
 ################################################################################
 server {###  redirection for servicewp  ########################################
   listen 80;
@@ -88,8 +93,8 @@ server {
   root /var/www/servicewp;
   server_tokens off;
 
-  ssl_certificate /etc/letsencrypt/live/gothings.org/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/gothings.org/privkey.pem;
+  ssl_certificate /etc/letsencrypt/live/pirri.me/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/pirri.me/privkey.pem;
 
   #####################################################################  ??? DA GUARDARE
   # include /etc/nginx/conf.d/options-ssl-nginx.conf;
