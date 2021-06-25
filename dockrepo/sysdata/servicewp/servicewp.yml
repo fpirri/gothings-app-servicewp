@@ -75,6 +75,13 @@ services:
     restart: unless-stopped
     env_file: .env-servicewp
     volumes:
+      ###### parte certbot
+      #   configurazione nginx
+      - ~/dockrepo/sysdata/nginx/data/certbot/conf:/etc/letsencrypt
+      #   site home per servicewp
+      - ~/dockrepo/sysdata/nginx/data/certbot/www:/var/www/certbot
+      ###### contenuto siti
+      #  sito servicewp
       - ~/dockrepo/sysdata/servicewp/var_www/:/var/www/html
     networks:
       gothingsnet:

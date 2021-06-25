@@ -1,4 +1,13 @@
-#                                                                               2021-04-26
+#                                                                               2021-06-17
+#
+#  NOTA: nuova versione, dopo nginx
+#        per ora vediamo solo se il php funziona
+#        poi installeremo wordpress
+#        verificare prima un wp singolo
+#        poi vedremo se un multisite puo' andar bene
+#        DA FARE anche i servizi ausiliari, come 'remove-servicewp
+#
+#########################
 #
 # Funzione: servizi PHP usando la Wordpress Rest API
 #     (ripreso da wpmultisite nella droplet gothings v01.03)
@@ -53,14 +62,15 @@ server {###  redirection for servicewp  ########################################
   listen 80;
   #  TUTTI i nomi validi per la app servicewp
   server_name
-    # siti wordpress
-              www.pirri.me
-              franco.pirri.me
-              marco.pirri.me
-              stefano.pirri.me
+    # sito wordpress singolo
+       servicewp.pirri.me
     # altri siti da portare in https per questa app:
-    #         ??
-              telemat.pirri.me
+    #          ??
+    #          www.pirri.me
+    #          franco.pirri.me
+    #          marco.pirri.me
+    #          stefano.pirri.me
+    #          telemat.pirri.me
   ;
 
   location ~ /.well-known/acme-challenge {
@@ -79,11 +89,7 @@ server {###  redirection for servicewp  ########################################
 server {
   listen 443 ssl http2;
   server_name
-              www.pirri.me
-              telemat.pirri.me
-              franco.pirri.me
-              marco.pirri.me
-              stefano.pirri.me
+       servicewp.pirri.me
   ;
 
 	access_log /dev/stdout gothings_services;
