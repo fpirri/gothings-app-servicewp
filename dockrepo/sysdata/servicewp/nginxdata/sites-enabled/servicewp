@@ -61,16 +61,8 @@
 server {###  redirection for servicewp  ########################################
   listen 80;
   #  TUTTI i nomi validi per la app servicewp
-  server_name
-    # sito wordpress singolo
-       servicewp.pirri.me
-    # altri siti da portare in https per questa app:
-    #          ??
-    #          www.pirri.me
-    #          franco.pirri.me
-    #          marco.pirri.me
-    #          stefano.pirri.me
-    #          telemat.pirri.me
+  server_name             # sito wordpress singolo
+      servicewp.pirri.me
   ;
 
   location ~ /.well-known/acme-challenge {

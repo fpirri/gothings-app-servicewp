@@ -12,7 +12,7 @@ HomeDir="/home/${UserName}/"
 Dockrepo="${HomeDir}dockrepo/"
 AppDir="${Dockrepo}sysdata/${AppName}/"
 SiteFile="${AppDir}nginxdata/sites-enabled/${AppName}"
-SiteNginxDir="${Dockrepo}sysdata/nginxdata/sites-enabled/"
+SiteNginxDir="${Dockrepo}sysdata/nginx/nginxdata/sites-enabled/"
 # ----------------------------------
 # costanti varie
 Red='\033[0;41;30m'
