@@ -62,7 +62,9 @@ sudo cp "${SiteFile}" "${SiteNginxDir}"
 RetValue=$?
 if [ "${RetValue}" -eq 0 ]; then
   echo "Successfully copied file"
-  echo -e "${Red} verifica nginx status: not implemented yet for ${AppName} ${Std}"
+  echo -e "${Red} verifica nginx status:  DEBUG phase for ${AppName} ${Std}"
+  
+
   pause 
 sudo 
 else
