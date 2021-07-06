@@ -35,7 +35,7 @@
 #
 ################################################################################
 #  
-#  WP Multisite
+#  WP Multisite                                 <== per ora SITO SINGOLO
 #
 #  - gestione servizi con la WP REST API
 #  - wp versione multisite in https
@@ -68,7 +68,7 @@ server {###  redirection for servicewp  ########################################
   location ~ /.well-known/acme-challenge {
     set $debug_value '|wpm: acme-challenge|';
     allow all;
-    root /var/www/html;
+    root /var/www/certbot;
   }
 
   location / {
@@ -77,15 +77,15 @@ server {###  redirection for servicewp  ########################################
 }
 #
 #################################################################################
-####################################################################################################
+#################################################################################
 server {
   listen 443 ssl http2;
   server_name
        servicewp.pirri.me
   ;
 
-	access_log /dev/stdout gothings_services;
   set $debug_value '{servicewp: wpsite}';#                  ----------------- init debug_value
+	access_log /dev/stdout gothings_services;
 
   index index.php index.html index.htm;
   root /var/www/servicewp;
@@ -119,7 +119,8 @@ server {
 
   location ~ \.php$ {
     set $debug_value '|servicewp: *.php|';
-    set $wordpress '172.29.196.188';
+    #set $wordpress '172.29.196.188';      #  IP assegnato in .yml:  172.29.196.188
+    set $wordpress '10.133.94.60';         #  IP droplet:  10.133.94.60
     try_files $uri =404;
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_pass $wordpress:9000;
@@ -130,7 +131,7 @@ server {
   }
 
   location ~ /\.ht {
-    set $debug_value '|servicewp: wp *.php|';
+    set $debug_value '|servicewp: .ht|';
     deny all;
   }
 
