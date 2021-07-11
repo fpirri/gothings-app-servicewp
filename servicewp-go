@@ -44,7 +44,7 @@ AppDir="${Dockrepo}sysdata/${AppName}/"
 AppConfigDir="${Dockrepo}sysconfig/${AppName}/"
 AppSecretDir="${Dockrepo}docksecret/${AppName}/"
 SiteFile="${AppDir}nginxdata/sites-enabled/${AppName}"
-SiteNginxDir="${Dockrepo}sysdata/nginxdata/sites-enabled/"
+SiteNginxDir="${Dockrepo}sysdata/nginx/nginxdata/sites-enabled/"
 WorkDir=${HomeDir}
 ScriptName="none"
 # -------------------------------------------------------  DA RIVEDERE alla fine
@@ -726,6 +726,68 @@ destroyapp() {
         dots 2
         ;;
   esac
+}
+#
+##########################################################################
+certbot(){
+  #  Gestione certificati per HTTPS con il certbot di Let's Encrypt
+  clear
+  echo
+  echo "------------------------------------------------------------ certbot"
+  echo "Manage HTTPS certificates"
+  echo "... using certbot from Let's Encrypt"
+  echo
+
+  echo
+  echo "1. START   certbot renewal process"
+  echo "2. STOP    certbot renewal process"
+  echo "3. DOWN    remove certbot container"
+  echo "   *       any other key to go back"
+  read -rsp "Please choose your option: " -n 1 key
+  case "$key" in
+      1) 
+        echo
+        echo "START certbot renewal process"
+        echo
+        docker-compose -f "${HOMEDIR}dockrepo/sysdata/${AppName}/certbot.yml" up -d
+        RetValue=$?
+        if [ ${RetValue} -gt 0 ]; then
+          bugmessage ERROR "${RetValue}" "     certbot START"
+          pause
+          return 47 #                                       certbot -->  ERRORE 47
+        fi
+        ;;
+      2)
+        echo
+        echo "STOP certbot renewal process"
+        echo
+        docker-compose -f "${HOMEDIR}dockrepo/sysdata/${AppName}/certbot.yml" stop
+        RetValue=$?
+        if [ ${RetValue} -gt 0 ]; then
+          bugmessage ERROR "${RetValue}" "     certbot STOP"
+          pause
+          return 48 #                                       certbot -->  ERRORE 48
+        fi
+        ;;
+      3)
+        echo
+        echo "DOWN certbot renewal process"
+        echo
+        docker-compose -f "${HOMEDIR}dockrepo/sysdata/${AppName}/certbot.yml" down
+        RetValue=$?
+        if [ ${RetValue} -gt 0 ]; then
+          bugmessage ERROR "${RetValue}" "     certbot DOWN"
+          pause
+          return 49 #                                       certbot -->  ERRORE 49
+        fi
+        ;;
+      *)
+        echo
+        echo "Back to main menu"
+        dots 1
+        ;;
+  esac
+  dots 2
 }
 #
 ##########################################################################

@@ -57,13 +57,16 @@ echo
 echo "--------------------------------------------------"
 echo "    setup nginxdata/sites-enabled"
 echo "      <-- copy server definition for ${AppName}"
+echo "       ${SiteFile}  -->"
+echo "  -->  ${SiteNginxDir}"
 echo
 sudo cp "${SiteFile}" "${SiteNginxDir}"
 RetValue=$?
 if [ "${RetValue}" -eq 0 ]; then
   echo "Successfully copied file"
   echo -e "${Red} verifica nginx status:  DEBUG phase for ${AppName} ${Std}"
-  
+
+#### AGGIUNGERE verifica configurazione
 
   pause 
 sudo 
