@@ -64,14 +64,14 @@ server {###  redirection for servicewp  ########################################
   server_name             # sito wordpress singolo
       servicewp.pirri.me
   ;
-
   location ~ /.well-known/acme-challenge {
-    set $debug_value '|wpm: acme-challenge|';
+    set $debug_value '|servicewp: acme-challenge|';
     allow all;
     root /var/www/certbot;
   }
 
   location / {
+    set $debug_value '|servicewp: redirect|';
     rewrite ^ https://$host$request_uri? permanent;
   }
 }
@@ -83,16 +83,20 @@ server {
   server_name
        servicewp.pirri.me
   ;
-
-  set $debug_value '{servicewp: wpsite}';#                  ----------------- init debug_value
+  # costanti varie
+  set $wordpress 'servicewp';            #  Nome simbolico, IP assegnato da docker
+  #set $wordpress '172.29.196.188';       #  IP assegnato in .yml:  172.29.196.188
+  #set $wordpress '10.133.94.60';         #  IP droplet:  10.133.94.60
+  #
+  set $debug_value '{servicewp: https}';#     ----------------- init debug_value
 	access_log /dev/stdout gothings_services;
 
   index index.php index.html index.htm;
   root /var/www/servicewp;
   server_tokens off;
 
-  ssl_certificate /etc/letsencrypt/live/pirri.me/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/pirri.me/privkey.pem;
+  ssl_certificate /etc/letsencrypt/live/servicewp.pirri.me/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/servicewp.pirri.me/privkey.pem;
 
   #####################################################################  ??? DA GUARDARE
   #          conf:   /usr/local/openresty/nginx/conf/
@@ -119,8 +123,6 @@ server {
 
   location ~ \.php$ {
     set $debug_value '|servicewp: *.php|';
-    #set $wordpress '172.29.196.188';      #  IP assegnato in .yml:  172.29.196.188
-    set $wordpress '10.133.94.60';         #  IP droplet:  10.133.94.60
     try_files $uri =404;
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
     fastcgi_pass $wordpress:9000;

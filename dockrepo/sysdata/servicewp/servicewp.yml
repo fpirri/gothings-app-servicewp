@@ -82,7 +82,9 @@ services:
       - ~/dockrepo/sysdata/nginx/data/certbot/www:/var/www/certbot
       ###### contenuto siti
       #  sito servicewp
-      - ~/dockrepo/sysdata/servicewp/var_www/:/var/www/html
+      - ~/dockrepo/sysdata/var_www/servicewp/:/var/www/servicewp/
+      # per configurare il php
+      - ~/dockrepo/sysdata/servicewp/doc_root.ini:/usr/local/etc/php/conf.d/doc_root.ini
     networks:
       gothingsnet:
         ipv4_address: 172.29.196.188

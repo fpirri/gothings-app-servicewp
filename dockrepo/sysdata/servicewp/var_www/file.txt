@@ -1,0 +1,3 @@
+*****
+Sono un file .txt
+bye!
